@@ -2,3 +2,7 @@
 .DS_Store
 LICENSE
 Cargo.lock
+.idea/vcs.xml
+.idea/modules.xml
+.idea/mealTransactionTracker.iml
+.idea/.gitignore

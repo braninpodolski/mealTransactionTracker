@@ -46,7 +46,6 @@ pub fn ui(frame: &mut Frame, app: &App) {
             format!("${:.2}", 54.212121).red()
         ])
     ]);
-    
 
     frame.render_widget(
         Paragraph::new("Meal Price Tracker")
