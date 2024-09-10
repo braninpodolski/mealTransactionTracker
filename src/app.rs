@@ -2,15 +2,19 @@ use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::{
     layout::{Constraint, Layout},
-    style:: {Stylize, Style, Color, Modifier},
-    text::{Line, Span},
+    style:: {Stylize, Style, Modifier},
     widgets::{Block, Paragraph},
+    text::{Text, Line},
     prelude::{Alignment},
     DefaultTerminal, Frame,
 };
+use tui_prompts::{TextState, TextPrompt, Prompt};
+use chrono::prelude::*;
+// use chrono::{DateTime, TimeDelta};
+
 
 #[derive(Debug, Default)]
-pub struct App {
+pub struct App{
     /// Is the application running?
     running: bool,
 }
@@ -25,25 +29,13 @@ impl App {
     pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
         self.running = true;
         while self.running {
-            terminal.draw(|frame| self.draw(frame))?;
+            terminal.draw(|frame| self.draw_ui(frame))?;
             self.handle_crossterm_events()?;
         }
         Ok(())
     }
 
-    /// Renders the user interface.
-    ///
-    /// This is where you add new widgets. See the following resources for more information:
-    /// - <https://docs.rs/ratatui/latest/ratatui/widgets/index.html>
-    /// - <https://github.com/ratatui/ratatui/tree/master/examples>
-    fn draw(&mut self, frame: &mut Frame) {
-        let title = Line::from("Ratatui Simple Template")
-            .bold()
-            .blue()
-            .centered();
-        let text = "Hello, Ratatui!\n\n\
-            Created using https://github.com/ratatui/templates\n\
-            Press `Esc`, `Ctrl-C` or `q` to stop running.";
+    fn draw_ui(&mut self, frame: &mut Frame) {
         
         // Basic layout
         let [header_area, main_area, navbar_area] = Layout::vertical([
@@ -51,7 +43,7 @@ impl App {
             Constraint::Min(1),
             Constraint::Length(1),
         ])
-        .areas(frame.size());
+        .areas(frame.area());
 
         // Navbar layout
         let [navbar_left, navbar_right] = Layout::horizontal([
@@ -74,21 +66,31 @@ impl App {
         ])
         .areas(top_half);
 
+        let monthly_text = Text::from(vec![
+            Line::from(vec![
+                "Meal Swipe Bill: ".into(),
+                format!("${:.2}", App::get_monthly_meal_swipe_estimate()).red()
+            ])
+        ]);
+        
+
         frame.render_widget(
             Paragraph::new("Meal Price Tracker")
                 .style(Style::new().black().on_blue())
                 .centered(),
             header_area,
         );
-
+        
         frame.render_widget(
-            Paragraph::new("")
-                .block(Block::bordered().title("Statistics"))
+            Paragraph::new(monthly_text)
+                .block(Block::bordered().title("Statistics\n"))
                 .centered()
                 .add_modifier(Modifier::BOLD)
                 .blue(),
             top_left,
         );
+        
+        
 
         frame.render_widget(
             Paragraph::new("")
@@ -147,5 +149,13 @@ impl App {
     /// Set running to false to quit the application.
     fn quit(&mut self) {
         self.running = false;
+    }
+
+    fn get_monthly_meal_swipe_estimate() -> f64 {
+        let today: NaiveDate = Local::now().date_naive();
+        let first_of_month: NaiveDate = today.with_day(1).unwrap();
+
+        let days_passed_in_month = today - first_of_month;
+        (days_passed_in_month.num_days() as f64) * 15.12 * 2.0
     }
 }
