@@ -1,5 +1,5 @@
 [package]
-name = "ui-practice"
+name = "mealTransactionTracker"
 version = "0.1.0"
 authors = ["braninpodolski <marshallbranin@gmail.com>"]
 license = "MIT"
