@@ -1,19 +1,5 @@
-use color_eyre::Result;
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
-use ratatui::{
-    layout::{Constraint, Layout},
-    style:: {Stylize, Style, Modifier},
-    widgets::{Block, Paragraph},
-    text::{Text, Line},
-    prelude::{Alignment},
-    DefaultTerminal, Frame,
-};
-use tui_prompts::{TextState, TextPrompt, Prompt};
 use chrono::prelude::*;
 // use chrono::{DateTime, TimeDelta};
-
-use crate::ui::ui;
-
 
 pub enum CurrentScreen {
     Main,
@@ -43,6 +29,11 @@ pub struct App{
     pub purchase_date_input: String,
 }
 
+pub struct MealSwipeInfo {
+    pub swipes: i64,
+    pub cost: f64,
+}
+
 
 impl App {
     /// Construct a new instance of [`App`].
@@ -59,17 +50,30 @@ impl App {
         }
     }
 
-    pub fn submitIngredient(&mut self) {
+    pub fn submit_ingredient(&mut self) {
         // Send value to database
         
         self.currently_editing = None;
     }
 
-    fn get_monthly_meal_swipe_estimate() -> f64 {
+    pub fn get_monthly_meal_swipe_estimate() -> f64 {
         let today: NaiveDate = Local::now().date_naive();
         let first_of_month: NaiveDate = today.with_day(1).unwrap();
 
         let days_passed_in_month = today - first_of_month;
         (days_passed_in_month.num_days() as f64) * 15.12 * 2.0
+    }
+
+    pub fn get_semesterly_meal_swipe_estimate() -> MealSwipeInfo {
+        let today: NaiveDate = Local::now().date_naive();
+        let first_date_semester: NaiveDate = NaiveDate::from_ymd_opt(2024, 9, 1).unwrap();
+
+        let days_passed_in_semester = today - first_date_semester;
+        let swipes_used = days_passed_in_semester.num_days() * 2;
+        let cost = swipes_used as f64 * 15.12;
+        MealSwipeInfo {
+            swipes: swipes_used,
+            cost: cost,
+        }
     }
 }
