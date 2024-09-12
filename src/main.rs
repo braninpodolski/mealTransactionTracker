@@ -3,7 +3,7 @@ use std::{error::Error, io};
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     crossterm::{
-        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
+        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
         execute,
         terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     },
@@ -58,9 +58,39 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                 continue;
             }
 
-            match key.code {
-                KeyCode::Char('q') => {
-                    return Ok(false);
+            match app.current_screen {
+                CurrentScreen::Main => match key.code {
+                        KeyCode::Char('q') => {
+                            return Ok(false);
+                        }
+                        KeyCode::Char('i') => {
+                            app.current_screen = CurrentScreen::SingleInput;
+                            app.currently_editing = Some(ItemInfo::Ingredient);
+                        }
+                        _ => {}
+                }
+                CurrentScreen::SingleInput => match key.code {
+                    KeyCode::Tab => match app.currently_editing {
+                        Some(ItemInfo::Ingredient) => {
+                            app.currently_editing = Some(ItemInfo::Price);
+                        }
+                        Some(ItemInfo::Price) => {
+                            if app.single_insert_mode {
+                                app.currently_editing = Some(ItemInfo::ExpendedDate);
+                            } else {
+                                app.currently_editing = Some(ItemInfo::PurchaseDate);
+                            }
+                        }
+                        Some(ItemInfo::ExpendedDate) => {
+                            app.currently_editing = Some(ItemInfo::Ingredient);
+                        }
+                        _ => {}
+                    }
+                    KeyCode::Esc => {
+                        app.current_screen = CurrentScreen::Main;
+                        app.currently_editing = None;
+                    }
+                    _ => {}
                 }
                 _ => {}
             };
