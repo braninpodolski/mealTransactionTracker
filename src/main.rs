@@ -16,6 +16,7 @@ use crate::{
     app::{App, CurrentScreen, ItemInfo},
     ui::ui,
 };
+use crate::app::ItemInfo::Ingredient;
 // fn main() -> color_eyre::Result<()> {
 //     color_eyre::install()?;
 //     let terminal = ratatui::init();
@@ -65,7 +66,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         }
                         KeyCode::Char('i') => {
                             app.current_screen = CurrentScreen::SingleInput;
-                            app.currently_editing = Some(ItemInfo::Ingredient);
+                            app.currently_editing = Some(ItemInfo::PurchaseDate);
                         }
                         _ => {}
                 }
@@ -75,20 +76,76 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             app.currently_editing = Some(ItemInfo::Price);
                         }
                         Some(ItemInfo::Price) => {
-                            if app.single_insert_mode {
-                                app.currently_editing = Some(ItemInfo::ExpendedDate);
-                            } else {
-                                app.currently_editing = Some(ItemInfo::PurchaseDate);
-                            }
+                            app.currently_editing = Some(ItemInfo::ExpendedDate);
                         }
                         Some(ItemInfo::ExpendedDate) => {
                             app.currently_editing = Some(ItemInfo::Ingredient);
                         }
                         _ => {}
                     }
+
                     KeyCode::Esc => {
                         app.current_screen = CurrentScreen::Main;
                         app.currently_editing = None;
+                    }
+                    KeyCode::Backspace => {
+                        if let Some(editing) = &app.currently_editing {
+                            match editing {
+                                ItemInfo::Ingredient => {
+                                    app.ingredient_input.pop();
+                                }
+                                ItemInfo::Price => {
+                                    app.price_input.pop();
+                                }
+                                ItemInfo::ExpendedDate => {
+                                    app.expended_date_input.pop();
+                                }
+                                ItemInfo::PurchaseDate => {
+                                    app.purchase_date_input.pop();
+                                }
+                            }
+                        }
+                    }
+                    KeyCode::Char(value) => {
+                        if let Some(editing) = &app.currently_editing {
+                            match editing {
+                                ItemInfo::Ingredient => {
+                                    app.ingredient_input.push(value);
+                                }
+                                ItemInfo::Price => {
+                                    app.price_input.push(value);
+                                }
+                                ItemInfo::ExpendedDate => {
+                                    app.expended_date_input.push(value);
+                                }
+                                ItemInfo::PurchaseDate => {
+                                    app.purchase_date_input.push(value);
+                                }
+                            }
+                        }
+                    }
+                    KeyCode::Enter => {
+                        if let Some(editing) = &app.currently_editing {
+                            match editing {
+                                ItemInfo::PurchaseDate => {
+                                    if !app.purchase_date_input.is_empty() {
+                                        app.currently_editing = Some(ItemInfo::Ingredient);
+                                    }
+                                }
+                                _ => {
+                                    if !app.ingredient_input.is_empty() && ! app.price_input.is_empty() {
+                                        App::submit_ingredient(app);
+                                        app.current_screen = CurrentScreen::SingleInput;
+                                        app.currently_editing = Some(Ingredient);
+                                        app.ingredient_input.clear();
+                                        app.price_input.clear();
+                                        app.expended_date_input.clear();
+                                    }
+                                }
+                            }
+                        }
+                        // implement submission logic
+
                     }
                     _ => {}
                 }

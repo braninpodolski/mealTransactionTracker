@@ -1,10 +1,11 @@
 use chrono::prelude::*;
+use crossterm::ExecutableCommand;
+use rusqlite::{params, Connection, Result};
 // use chrono::{DateTime, TimeDelta};
 
 pub enum CurrentScreen {
     Main,
     SingleInput,
-    RecieptDateInput,
     RemoveConfirmation,
     EditExpended
 }
@@ -20,7 +21,7 @@ pub enum ItemInfo {
 pub struct App{
     /// Is the application running?
     pub running: bool,
-    pub single_insert_mode: bool,
+    // pub single_insert_mode: bool,
     pub currently_editing: Option<ItemInfo>,
     pub current_screen: CurrentScreen,
     pub ingredient_input: String,
@@ -40,7 +41,7 @@ impl App {
     pub fn new() -> App {
         App {
             running: false,
-            single_insert_mode: true,
+            // single_insert_mode: true,
             currently_editing: None,
             current_screen: CurrentScreen::Main,
             ingredient_input: String::new(),
@@ -52,8 +53,12 @@ impl App {
 
     pub fn submit_ingredient(&mut self) {
         // Send value to database
-        
-        self.currently_editing = None;
+        let mut conn = Connection::open("purchases.db");
+        let result = conn.expect("REASON").execute(
+            "INSERT INTO purchase (ingredient, price, purchaseDate, expendedDate) VALUES (?1, ?2, ?3, ?4)",
+            (&self.ingredient_input, &self.price_input, &self.purchase_date_input, &self.expended_date_input),
+        );
+        println!("{:?}", result);
     }
 
     pub fn get_monthly_meal_swipe_estimate() -> f64 {
