@@ -11,6 +11,7 @@ pub enum CurrentScreen {
 }
 
 pub enum ItemInfo {
+    Id,
     Ingredient,
     Price,
     ExpendedDate,
@@ -51,14 +52,22 @@ impl App {
         }
     }
 
-    pub fn submit_ingredient(&mut self) {
+    pub fn submit_ingredient(&mut self) -> Result<()> {
+        // TODO: Add shorthand for dates ('t" = today, 'y' = yesterday, '-x' = x days ago)
         // Send value to database
-        let mut conn = Connection::open("purchases.db");
-        let result = conn.expect("REASON").execute(
+        let conn = Connection::open("src/purchases.db")?;
+        let price = (&self.price_input.parse::<f32>().unwrap() * 100.0) as i32;
+        let mut expended = "NULL";
+
+        if !&self.expended_date_input.is_empty() {
+            expended = &self.expended_date_input;
+        }
+
+        conn.execute(
             "INSERT INTO purchase (ingredient, price, purchaseDate, expendedDate) VALUES (?1, ?2, ?3, ?4)",
-            (&self.ingredient_input, &self.price_input, &self.purchase_date_input, &self.expended_date_input),
-        );
-        println!("{:?}", result);
+            (&self.ingredient_input, price, &self.purchase_date_input, expended),
+        )?;
+        Ok(())
     }
 
     pub fn get_monthly_meal_swipe_estimate() -> f64 {
