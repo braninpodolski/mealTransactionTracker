@@ -45,6 +45,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         DisableMouseCapture
     )?;
     terminal.show_cursor()?;
+    // App::get_people();
 
     Ok(())
 }
@@ -103,6 +104,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                                 ItemInfo::PurchaseDate => {
                                     app.purchase_date_input.pop();
                                 }
+                                _ => {}
                             }
                         }
                     }
@@ -121,6 +123,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                                 ItemInfo::PurchaseDate => {
                                     app.purchase_date_input.push(value);
                                 }
+                                _ => {}
                             }
                         }
                     }

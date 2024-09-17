@@ -1,13 +1,11 @@
-use chrono::format::Item;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect, Flex},
     style::{Color, Style, Stylize, Modifier},
     text::{Line},
-    widgets::*,
+    widgets::{Table, Borders, Block, Row, Paragraph, Clear},
     prelude::*,
     Frame,
 };
-
 use crate::app::{App, CurrentScreen, ItemInfo};
 
 pub fn ui(frame: &mut Frame, app: &App) {

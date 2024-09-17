@@ -11,4 +11,4 @@ ratatui = "0.28.1"
 color-eyre = "0.6.3"
 tui-prompts = "0.4.0"
 chrono = "0.4.38"
-rusqlite = { version = "0.32.1", features = ["bundled"] }
+sqlite = "0.36.1"

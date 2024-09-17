@@ -1,7 +1,7 @@
+use chrono::Duration;
 use chrono::prelude::*;
 use crossterm::ExecutableCommand;
-use rusqlite::{params, Connection, Result};
-// use chrono::{DateTime, TimeDelta};
+use sqlite::Value;
 
 pub enum CurrentScreen {
     Main,
@@ -16,6 +16,16 @@ pub enum ItemInfo {
     Price,
     ExpendedDate,
     PurchaseDate,
+}
+
+#[derive(Debug)]
+#[derive(Clone)]
+pub struct dbResults {
+    id: i32,
+    ingredient: String,
+    price: i32,
+    expended_date: String,
+    purchase_date: String,
 }
 
 // #[derive(Debug, Default)]
@@ -52,22 +62,39 @@ impl App {
         }
     }
 
-    pub fn submit_ingredient(&mut self) -> Result<()> {
+    pub fn submit_ingredient(&mut self) {
         // TODO: Add shorthand for dates ('t" = today, 'y' = yesterday, '-x' = x days ago)
         // Send value to database
-        let conn = Connection::open("src/purchases.db")?;
-        let price = (&self.price_input.parse::<f32>().unwrap() * 100.0) as i32;
+        let conn = sqlite::open("src/purchases.db").unwrap();
+        let price = (&self.price_input.parse::<f64>().unwrap() * 100.0) as i64;
         let mut expended = "NULL";
+        let mut purchase_date: String;
+
 
         if !&self.expended_date_input.is_empty() {
             expended = &self.expended_date_input;
         }
 
-        conn.execute(
-            "INSERT INTO purchase (ingredient, price, purchaseDate, expendedDate) VALUES (?1, ?2, ?3, ?4)",
-            (&self.ingredient_input, price, &self.purchase_date_input, expended),
-        )?;
-        Ok(())
+        if self.purchase_date_input.to_lowercase().eq("t") {
+            let today = Local::now();
+            purchase_date = format!("{}",today.format("%Y-%m-%d"));
+        } else if self.purchase_date_input.to_lowercase().eq("y") {
+            let yesterday = Local::now() - Duration::days(1);
+            purchase_date = format!("{}", yesterday.format("%Y-%m-%d"));
+        } else {
+            purchase_date = self.purchase_date_input.clone();
+        }
+
+
+        let query = "INSERT INTO purchase (ingredient, price, purchaseDate, expendedDate) VALUES (?, ?, ?, ?)";
+        let mut statement = conn.prepare(query).unwrap();
+
+        statement.bind((1, self.ingredient_input.as_str())).unwrap();
+        statement.bind((2, price)).unwrap();
+        statement.bind((3, purchase_date.as_str())).unwrap();
+        statement.bind((4, expended)).unwrap();
+
+        statement.next().unwrap();
     }
 
     pub fn get_monthly_meal_swipe_estimate() -> f64 {
@@ -90,4 +117,21 @@ impl App {
             cost: cost,
         }
     }
+
+    // pub fn get_people() -> Result<()> {
+    //     let conn = Connection::open("src/purchases.db")?;
+    //
+    //     let mut stmt = conn.prepare("SELECT rowid, * FROM purchase")?;
+    //     let person_iter = stmt.query_map([], |row| {
+    //         Ok(dbResults {
+    //             id: row.get(0)?,
+    //             ingredient: row.get(1)?,
+    //             price: row.get(2)?,
+    //             expended_date: row.get(3)?,
+    //             purchase_date: row.get(4)?,
+    //         })
+    //     })?;
+    //
+    //     person_iter
+    // }
 }
