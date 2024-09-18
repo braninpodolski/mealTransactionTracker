@@ -17,6 +17,7 @@ use crate::{
     ui::ui,
 };
 use crate::app::ItemInfo::Ingredient;
+
 // fn main() -> color_eyre::Result<()> {
 //     color_eyre::install()?;
 //     let terminal = ratatui::init();
@@ -45,7 +46,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         DisableMouseCapture
     )?;
     terminal.show_cursor()?;
-    // App::get_people();
 
     Ok(())
 }
@@ -68,6 +68,15 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         KeyCode::Char('i') => {
                             app.current_screen = CurrentScreen::SingleInput;
                             app.currently_editing = Some(ItemInfo::PurchaseDate);
+                        }
+                        KeyCode::Down => {
+                            App::next(app);
+                        }
+                        KeyCode::Up => {
+                            App::prev(app);
+                        }
+                        KeyCode::Char('e') => {
+                            println!("{:?}", App::get_ingredient_entries(app)[app.state.selected().ok_or(0).unwrap()]);
                         }
                         _ => {}
                 }

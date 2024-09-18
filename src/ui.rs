@@ -1,14 +1,43 @@
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect, Flex},
-    style::{Color, Style, Stylize, Modifier},
+    style::{Color, Style, Stylize, Modifier, palette::tailwind},
     text::{Line},
     widgets::{Table, Borders, Block, Row, Paragraph, Clear},
     prelude::*,
     Frame,
 };
+use ratatui::widgets::HighlightSpacing;
 use crate::app::{App, CurrentScreen, ItemInfo};
 
-pub fn ui(frame: &mut Frame, app: &App) {
+struct TableColors {
+    buffer_bg: Color,
+    header_bg: Color,
+    header_fg: Color,
+    row_fg: Color,
+    selected_style_fg: Color,
+    normal_row_color: Color,
+    alt_row_color: Color,
+    footer_border_color: Color,
+}
+
+impl TableColors {
+    const fn new(color: &tailwind::Palette) -> Self {
+        Self {
+            buffer_bg: tailwind::SLATE.c950,
+            header_bg: color.c900,
+            header_fg: tailwind::SLATE.c200,
+            row_fg: tailwind::SLATE.c200,
+            selected_style_fg: color.c400,
+            normal_row_color: tailwind::SLATE.c950,
+            alt_row_color: tailwind::SLATE.c900,
+            footer_border_color: color.c400,
+        }
+    }
+}
+
+const ITEM_HEIGHT: usize = 1;
+
+pub fn ui(frame: &mut Frame, app: &mut App) {
     // Create the layout sections.
     // Basic layout
     let [header_area, main_area, navbar_area] = Layout::vertical([
@@ -30,6 +59,7 @@ pub fn ui(frame: &mut Frame, app: &App) {
         Constraint::Percentage(50),
         Constraint::Percentage(50),
     ])
+        .margin(1)
         .areas(main_area);
 
     // Top half layout
@@ -41,7 +71,7 @@ pub fn ui(frame: &mut Frame, app: &App) {
 
     let stats_block = Block::bordered().title("Statistics\n");
     let graph_block = Block::bordered().title("Daily Spending (Month)");
-    let table_block = Block::bordered().title("Transactions");
+    // let table_block = Block::bordered().title("Transactions");
 
     let monthly_text:Line = vec![
             "Month Meal Swipe Bill: ".into(),
@@ -63,6 +93,14 @@ pub fn ui(frame: &mut Frame, app: &App) {
         semester_cost_text,
         semester_count_text,
     ];
+
+    use ratatui::{prelude::*, widgets::*};
+
+    let rows = App::get_ingredient_entries(app);
+    // Columns widths are constrained in the same way as Layout...
+    let table = render_table(rows);
+
+    frame.render_stateful_widget(table, bottom_half, &mut app.state);
 
     frame.render_widget(
         Paragraph::new("Meal Price Tracker")
@@ -89,14 +127,14 @@ pub fn ui(frame: &mut Frame, app: &App) {
         top_right,
     );
 
-    frame.render_widget(
-        Paragraph::new("")
-            .block(table_block)
-            .centered()
-            .add_modifier(Modifier::BOLD)
-            .blue(),
-        bottom_half,
-    );
+    // frame.render_widget(
+    //     Paragraph::new("")
+    //         .block(table_block)
+    //         .centered()
+    //         .add_modifier(Modifier::BOLD)
+    //         .blue(),
+    //     bottom_half,
+    // );
 
     frame.render_widget(
         Paragraph::new(" (q) to quit | (i) to add transaction | (e) to edit expended | (r) to remove entry | (R) headless remove").style(Style::new().black().on_blue()),
@@ -174,4 +212,44 @@ fn popup_area(area: Rect, percent_x: u16, pixel_y: u16) -> Rect {
     let [area] = vertical.areas(area);
     let [area] = horizontal.areas(area);
     area
+}
+
+fn render_table (rows: Vec<Row>) -> Table {
+    // Columns widths are constrained in the same way as Layout...
+    let widths = [
+        Constraint::Length(12),
+        Constraint::Fill(1),
+        Constraint::Fill(1),
+        Constraint::Fill(1),
+        Constraint::Fill(1),
+
+    ];
+
+    let bar = " █ ";
+
+    Table::new(rows, widths)
+        // ...and they can be separated by a fixed spacing.
+        // You can set the style of the entire Table.
+        .style(Style::new().light_blue())
+        // It has an optional header, which is simply a Row always visible at the top.
+        .header(
+            Row::new(vec!["ID", "Ingredient", "Price", "Purchase Date", "Expended Date"])
+                .style(Style::new().bold())
+                // To add space between the header and the rest of the rows, specify the margin
+                .bottom_margin(1),
+        )
+        // As any other widget, a Table can be wrapped in a Block.
+        .block(Block::new().title("Transactions").borders(Borders::ALL))
+        // The selected row and its content can also be styled.
+        .highlight_style(Style::new().reversed())
+        // ...and potentially show a symbol in front of the selection.
+        .highlight_symbol(Text::from(vec![
+            "".into(),
+            bar.into(),
+            bar.into(),
+            "".into(),
+        ]))
+        .highlight_spacing(HighlightSpacing::Always)
+
+
 }
