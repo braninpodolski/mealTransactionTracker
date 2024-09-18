@@ -49,8 +49,8 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
 
     // Navbar layout
     let [navbar_left, navbar_right] = Layout::horizontal([
-        Constraint::Min(10),
-        Constraint::Length(25),
+        Constraint::Fill(1),
+        Constraint::Fill(1),
     ])
         .areas(navbar_area);
 
@@ -98,7 +98,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
 
     let rows = App::get_ingredient_entries(app);
     // Columns widths are constrained in the same way as Layout...
-    let table = render_table(rows);
+    let table = render_table(rows, app.query_input.clone());
 
     frame.render_stateful_widget(table, bottom_half, &mut app.state);
 
@@ -142,7 +142,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
     );
 
     frame.render_widget(
-        Paragraph::new("Sep 8 ").style(Style::new().black().on_blue()).alignment(Alignment::Right),
+        Paragraph::new("(Q) to query | (Back) to reset | (p/P) sort by price | (d/D) sort by date | (s) smart sort ").style(Style::new().black().on_blue()).alignment(Alignment::Right),
         navbar_right,
     );
 
@@ -214,7 +214,7 @@ fn popup_area(area: Rect, percent_x: u16, pixel_y: u16) -> Rect {
     area
 }
 
-fn render_table (rows: Vec<Row>) -> Table {
+fn render_table (rows: Vec<Row>, query_input: String) -> Table {
     // Columns widths are constrained in the same way as Layout...
     let widths = [
         Constraint::Length(12),
@@ -238,6 +238,7 @@ fn render_table (rows: Vec<Row>) -> Table {
                 // To add space between the header and the rest of the rows, specify the margin
                 .bottom_margin(1),
         )
+        .footer((Row::new(vec![format!("Search: {}", query_input)])))
         // As any other widget, a Table can be wrapped in a Block.
         .block(Block::new().title("Transactions").borders(Borders::ALL))
         // The selected row and its content can also be styled.

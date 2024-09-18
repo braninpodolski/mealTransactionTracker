@@ -12,7 +12,8 @@ pub enum CurrentScreen {
     Main,
     SingleInput,
     RemoveConfirmation,
-    EditExpended
+    EditExpended,
+    Query
 }
 
 pub enum ItemInfo {
@@ -39,6 +40,8 @@ pub struct DbResults {
 pub struct App{
     /// Is the application running?
     pub running: bool,
+    pub order_by: String,
+    pub search_param: String,
     pub state: TableState,
     pub item_count: i32,
     // pub single_insert_mode: bool,
@@ -47,6 +50,7 @@ pub struct App{
     pub ingredient_input: String,
     pub price_input: String,
     pub expended_date_input: String,
+    pub query_input: String,
     pub purchase_date_input: String,
     pub scroll_state: ScrollbarState
 }
@@ -62,6 +66,8 @@ impl App {
     pub fn new() -> App {
         App {
             running: false,
+            order_by: "expendedDate DESC, purchaseDate ASC".to_string(),
+            search_param: "true".to_string(),
             state: TableState::default().with_selected(0),
             item_count: 0,
             // single_insert_mode: true,
@@ -70,6 +76,7 @@ impl App {
             current_screen: CurrentScreen::Main,
             ingredient_input: String::new(),
             price_input: String::new(),
+            query_input: String::new(),
             expended_date_input: String::new(),
             purchase_date_input: String::new(),
         }
@@ -145,7 +152,7 @@ impl App {
     pub fn get_ingredient_entries(&mut self) -> Vec<Row<'static>> {
         let conn = sqlite::open("src/purchases.db").unwrap();
 
-        let query = "SELECT rowid, * FROM purchase ORDER BY expendedDate DESC, purchaseDate ASC";
+        let query = format!("SELECT rowid, * FROM purchase WHERE {} ORDER BY {}", &self.search_param, &self.order_by);
         let mut rows = Vec::<Row>::new();
 
         let mut statement = conn.prepare(query).unwrap();

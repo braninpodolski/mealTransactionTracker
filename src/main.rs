@@ -78,6 +78,28 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         KeyCode::Char('e') => {
                             println!("{:?}", App::get_ingredient_entries(app)[app.state.selected().ok_or(0).unwrap()]);
                         }
+                        KeyCode::Char('p') => {
+                            app.order_by = "price DESC".to_string();
+                        }
+                        KeyCode::Char('P') => {
+                            app.order_by = "price ASC".to_string();
+                        }
+                        KeyCode::Char('d') => {
+                            app.order_by = "purchaseDate DESC".to_string();
+                        }
+                        KeyCode::Char('D') => {
+                            app.order_by = "purchaseDate ASC".to_string();
+                        }
+                        KeyCode::Char('s') => {
+                            app.order_by = "expendedDate DESC, purchaseDate ASC".to_string();
+                        }
+                        KeyCode::Char('Q') => {
+                            app.current_screen = CurrentScreen::Query;
+                        }
+                        KeyCode::Backspace => {
+                            app.search_param = "true".to_string();
+                            app.query_input = "".to_string();
+                        }
                         _ => {}
                 }
                 CurrentScreen::SingleInput => match key.code {
@@ -160,6 +182,27 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
 
                     }
                     _ => {}
+                }
+                CurrentScreen::Query => match key.code {
+                    KeyCode::Esc => {
+                        app.current_screen = CurrentScreen::Main;
+                        app.search_param = "true".to_string();
+                        app.query_input = "".to_string();
+                    }
+                    KeyCode::Char(val) => {
+                        app.query_input.push(val);
+                        app.search_param = format!("ingredient LIKE \"{}%\"", app.query_input.clone());
+                    }
+                    KeyCode::Backspace => {
+                        app.query_input.pop();
+                        app.search_param = format!("ingredient LIKE \"{}%\"", app.query_input.clone());
+                    }
+                    KeyCode::Enter => {
+                        app.current_screen = CurrentScreen::Main;
+                    }
+                    _ => {
+
+                    }
                 }
                 _ => {}
             };
