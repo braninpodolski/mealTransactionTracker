@@ -1,5 +1,5 @@
 use std::{error::Error, io};
-
+use chrono::{Duration, Local};
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     crossterm::{
@@ -76,7 +76,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             App::prev(app);
                         }
                         KeyCode::Char('e') => {
-                            println!("{:?}", App::get_ingredient_entries(app)[app.state.selected().ok_or(0).unwrap()]);
+                            app.current_screen = CurrentScreen::EditExpended;
+                            app.currently_editing = Some(ItemInfo::ExpendedDate);
                         }
                         KeyCode::Char('p') => {
                             app.order_by = "price DESC".to_string();
@@ -180,6 +181,42 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         }
                         // implement submission logic
 
+                    }
+                    _ => {}
+                }
+                CurrentScreen::EditExpended => match key.code {
+                    KeyCode::Backspace => {
+                        app.expended_date_input.pop();
+                    }
+                    KeyCode::Char(val) => {
+                        app.expended_date_input.push(val);
+                    }
+                    KeyCode::Esc => {
+                        app.expended_date_input.clear();
+                        app.current_screen = CurrentScreen::Main;
+                        app.currently_editing = None;
+                    }
+                    KeyCode::Enter => {
+                        let item_id = (&app.row_data[app.state.selected().ok_or(0).unwrap()][0]).clone();
+                        let mut expended = app.expended_date_input.clone();
+
+                        match expended.to_lowercase().as_str() {
+                            "t" => {
+                                let today = Local::now();
+                                expended = format!("{}",today.format("%Y-%m-%d"));
+                            }
+
+                            "y" => {
+                                let yesterday = Local::now() - Duration::days(1);
+                                expended = format!("{}", yesterday.format("%Y-%m-%d"));
+                            }
+                            _ => {}
+                        }
+
+                        App::update_expended(item_id, expended);
+                        app.expended_date_input.clear();
+                        app.current_screen = CurrentScreen::Main;
+                        app.currently_editing = None;
                     }
                     _ => {}
                 }

@@ -1,3 +1,4 @@
+use std::os::fd::AsRawFd;
 use chrono::prelude::*;
 use chrono::Duration;
 use ratatui::{
@@ -44,6 +45,7 @@ pub struct App{
     pub search_param: String,
     pub state: TableState,
     pub item_count: i32,
+    pub row_data: Vec<Vec<String>>,
     // pub single_insert_mode: bool,
     pub currently_editing: Option<ItemInfo>,
     pub current_screen: CurrentScreen,
@@ -70,6 +72,7 @@ impl App {
             search_param: "true".to_string(),
             state: TableState::default().with_selected(0),
             item_count: 0,
+            row_data: Vec::<Vec<String>>::new(),
             // single_insert_mode: true,
             currently_editing: None,
             scroll_state: ScrollbarState::new(1),
@@ -127,6 +130,18 @@ impl App {
         statement.next().unwrap();
     }
 
+    pub fn update_expended(item_id: String, new_date: String) {
+        let conn = sqlite::open("src/purchases.db").unwrap();
+        let query = "UPDATE purchase SET expendedDate = ? WHERE rowid = ?";
+
+        let mut statement = conn.prepare(query).unwrap();
+
+        statement.bind((1, new_date.as_str()));
+        statement.bind((2, item_id.as_str()));
+
+        statement.next().unwrap();
+    }
+
     pub fn get_monthly_meal_swipe_estimate() -> f64 {
         let today: NaiveDate = Local::now().date_naive();
         let first_of_month: NaiveDate = today.with_day(1).unwrap();
@@ -149,11 +164,11 @@ impl App {
     }
 
     // Queries SQLite and returns Table Row Vector
-    pub fn get_ingredient_entries(&mut self) -> Vec<Row<'static>> {
+    pub fn get_ingredient_entries(&mut self) -> Vec<Vec<String>> {
         let conn = sqlite::open("src/purchases.db").unwrap();
 
         let query = format!("SELECT rowid, * FROM purchase WHERE {} ORDER BY {}", &self.search_param, &self.order_by);
-        let mut rows = Vec::<Row>::new();
+        let mut rows = Vec::<Vec<String>>::new();
 
         let mut statement = conn.prepare(query).unwrap();
         let mut i = 0;
@@ -171,13 +186,13 @@ impl App {
                 _ => Color::from_u32(0x0d1823)
             };
 
-            rows.push(Row::new(vec![
-                Cell::from(rowid),
-                Cell::from(ingredient),
-                Cell::from(price),
-                Cell::from(purchase_date),
-                Cell::from(expended_date),
-            ]).style(Style::new().fg(tailwind::SLATE.c200).bg(color)));
+            rows.push(vec![
+                rowid,
+                ingredient,
+                price,
+                purchase_date,
+                expended_date,
+            ]);
 
             i += 1;
         }
