@@ -1,42 +1,13 @@
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect, Flex},
+    layout::{Constraint, Layout, Rect, Flex},
     style::{Color, Style, Stylize, Modifier, palette::tailwind},
     text::{Line},
     widgets::{Table, Borders, Block, Row, Paragraph, Clear},
     prelude::*,
     Frame,
 };
-use ratatui::layout::Rows;
 use ratatui::widgets::HighlightSpacing;
 use crate::app::{App, CurrentScreen, ItemInfo};
-
-struct TableColors {
-    buffer_bg: Color,
-    header_bg: Color,
-    header_fg: Color,
-    row_fg: Color,
-    selected_style_fg: Color,
-    normal_row_color: Color,
-    alt_row_color: Color,
-    footer_border_color: Color,
-}
-
-impl TableColors {
-    const fn new(color: &tailwind::Palette) -> Self {
-        Self {
-            buffer_bg: tailwind::SLATE.c950,
-            header_bg: color.c900,
-            header_fg: tailwind::SLATE.c200,
-            row_fg: tailwind::SLATE.c200,
-            selected_style_fg: color.c400,
-            normal_row_color: tailwind::SLATE.c950,
-            alt_row_color: tailwind::SLATE.c900,
-            footer_border_color: color.c400,
-        }
-    }
-}
-
-const ITEM_HEIGHT: usize = 1;
 
 pub fn ui(frame: &mut Frame, app: &mut App) {
     // Create the layout sections.
@@ -147,15 +118,6 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
         top_right,
     );
 
-    // frame.render_widget(
-    //     Paragraph::new("")
-    //         .block(table_block)
-    //         .centered()
-    //         .add_modifier(Modifier::BOLD)
-    //         .blue(),
-    //     bottom_half,
-    // );
-
     frame.render_widget(
         Paragraph::new(" (q) to quit | (i) to add transaction | (e) to edit expended | (E) expended today | (r/R) to remove entry").style(Style::new().black().on_blue()),
         navbar_left,
@@ -170,8 +132,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
 
         let active_style = Style::default().bg(Color::LightBlue).fg(Color::Black);
 
-        if let screen = &app.current_screen {
-            match screen {
+            match &app.current_screen {
                 CurrentScreen::SingleInput => {
                     match editing {
                         ItemInfo::PurchaseDate => {
@@ -244,7 +205,6 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
                     frame.render_widget(purchase_text, popup_chunks[0]);
                 }
                 _ => {}
-            }
         }
     }
 }

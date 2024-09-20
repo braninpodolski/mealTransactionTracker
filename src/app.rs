@@ -1,11 +1,7 @@
-use std::os::fd::AsRawFd;
 use chrono::prelude::*;
 use chrono::Duration;
-use ratatui::{
-    widgets::{Cell, Row},
-};
-use ratatui::style::palette::tailwind;
-use ratatui::style::{Color, Style};
+
+use ratatui::style::{Color};
 use ratatui::widgets::{ScrollbarState, TableState};
 use sqlite::State;
 
@@ -34,8 +30,6 @@ pub struct DbResults {
     expended_date: String,
     purchase_date: String,
 }
-
-
 
 // #[derive(Debug, Default)]
 pub struct App{
@@ -86,7 +80,6 @@ impl App {
     }
 
     pub fn submit_ingredient(&mut self) {
-        // TODO: Add shorthand for dates ('t" = today, 'y' = yesterday, '-x' = x days ago)
         // Send value to database
         let conn = sqlite::open("src/purchases.db").unwrap();
         let price = (&self.price_input.parse::<f64>().unwrap() * 100.0) as i64;
@@ -136,8 +129,8 @@ impl App {
 
         let mut statement = conn.prepare(query).unwrap();
 
-        statement.bind((1, new_date.as_str()));
-        statement.bind((2, item_id.as_str()));
+        let _ = statement.bind((1, new_date.as_str()));
+        let _ = statement.bind((2, item_id.as_str()));
 
         statement.next().unwrap();
     }
@@ -180,11 +173,6 @@ impl App {
             let price = format!("${:.2}",(statement.read::<i64, _>("price").unwrap_or_else(|_| 0) as f64) / 100.00);
             let purchase_date = statement.read::<String, _>("purchaseDate").unwrap_or_else(|_| "Unknown".to_string());
             let expended_date = statement.read::<String, _>("expendedDate").unwrap_or_else(|_| "Unknown".to_string());
-            // Create Ratatui Row using Cell::from for each value
-            let color = match i % 2 {
-                0 => Color::Reset,
-                _ => Color::from_u32(0x0d1823)
-            };
 
             rows.push(vec![
                 rowid,
