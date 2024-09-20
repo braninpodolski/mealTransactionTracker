@@ -79,6 +79,12 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             app.current_screen = CurrentScreen::EditExpended;
                             app.currently_editing = Some(ItemInfo::ExpendedDate);
                         }
+                        KeyCode::Char('E') => {
+                            let item_id = (&app.row_data[app.state.selected().ok_or(0).unwrap()][0]).clone();
+                            let today = Local::now();
+                            let expended = format!("{}",today.format("%Y-%m-%d"));
+                            App::update_expended(item_id, expended);
+                        }
                         KeyCode::Char('p') => {
                             app.order_by = "price DESC".to_string();
                         }

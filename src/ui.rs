@@ -50,8 +50,8 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
 
     // Navbar layout
     let [navbar_left, navbar_right] = Layout::horizontal([
-        Constraint::Fill(1),
-        Constraint::Fill(1),
+        Constraint::Min(1),
+        Constraint::Min(1),
     ])
         .areas(navbar_area);
 
@@ -157,7 +157,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
     // );
 
     frame.render_widget(
-        Paragraph::new(" (q) to quit | (i) to add transaction | (e) to edit expended | (r) to remove entry | (R) headless remove").style(Style::new().black().on_blue()),
+        Paragraph::new(" (q) to quit | (i) to add transaction | (e) to edit expended | (E) expended today | (r/R) to remove entry").style(Style::new().black().on_blue()),
         navbar_left,
     );
 
