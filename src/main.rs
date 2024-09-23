@@ -234,11 +234,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     }
                     KeyCode::Char(val) => {
                         app.query_input.push(val);
-                        app.search_param = format!("ingredient LIKE \"{}%\"", app.query_input.clone());
+                        app.search_param = format!("ingredient LIKE \"%{}%\"", app.query_input.clone());
                     }
                     KeyCode::Backspace => {
                         app.query_input.pop();
-                        app.search_param = format!("ingredient LIKE \"{}%\"", app.query_input.clone());
+                        app.search_param = format!("ingredient LIKE \"%{}%\"", app.query_input.clone());
                     }
                     KeyCode::Enter => {
                         app.current_screen = CurrentScreen::Main;
